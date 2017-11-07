@@ -169,8 +169,10 @@ close_decoder (GstMfxDecoder * decoder)
   gst_mfx_filter_replace (&decoder->filter, NULL);
   /* Make sure frame allocator points to the right task to free surfaces */
   gst_mfx_task_aggregator_set_current_task (decoder->aggregator,
-      decoder->decode);
+    decoder->decode);
   /* calls gst_mfx_task_frame_free() when configured with video memory */
+  if (decoder->plugin_uid)
+    MFXVideoUSER_UnLoad (decoder->session, decoder->plugin_uid);
   MFXVideoDECODE_Close (decoder->session);
 }
 
@@ -186,8 +188,6 @@ gst_mfx_decoder_finalize (GObject * object)
   g_queue_foreach (&decoder->input_frames,
       (GFunc) gst_video_codec_frame_unref, NULL);
   g_queue_foreach (&decoder->pending_frames,
-      (GFunc) gst_video_codec_frame_unref, NULL);
-  g_queue_foreach (&decoder->decoded_frames,
       (GFunc) gst_video_codec_frame_unref, NULL);
   g_queue_clear (&decoder->input_frames);
   g_queue_clear (&decoder->pending_frames);
@@ -470,7 +470,7 @@ configure_filter (GstMfxDecoder * decoder)
     gst_mfx_task_set_request (decoder->decode, &decoder->request);
 
     gst_mfx_filter_set_frame_info (decoder->filter,
-        &decoder->params.mfx.FrameInfo);
+      &decoder->params.mfx.FrameInfo);
     if (enable_csc)
       gst_mfx_filter_set_format (decoder->filter, output_format);
     if (enable_deinterlace) {
@@ -480,7 +480,7 @@ configure_filter (GstMfxDecoder * decoder)
       gst_mfx_filter_set_deinterlace_method (decoder->filter, di_method);
     }
     gst_mfx_filter_set_async_depth (decoder->filter,
-        decoder->params.AsyncDepth);
+      decoder->params.AsyncDepth);
 
     if (!gst_mfx_filter_prepare (decoder->filter)) {
       GST_ERROR ("Unable to set up postprocessing filter.");
@@ -608,25 +608,6 @@ done:
 }
 
 gboolean
-gst_mfx_decoder_reinit (GstMfxDecoder * decoder)
-{
-  close_decoder (decoder);
-
-  if (!configure_filter (decoder))
-    return FALSE;
-
-  if (!init_decoder (decoder)) {
-    gst_mfx_surface_pool_replace (&decoder->pool, NULL);
-    gst_mfx_filter_replace (&decoder->filter, NULL);
-    return FALSE;
-  }
-
-  gst_mfx_decoder_flush (decoder);
-
-  return TRUE;
-}
-
-gboolean
 gst_mfx_decoder_reset (GstMfxDecoder * decoder)
 {
   mfxStatus sts = MFX_ERR_NONE;
@@ -684,12 +665,12 @@ queue_output_frame (GstMfxDecoder * decoder, GstMfxSurface * surface)
 
   if (NULL == out_frame) {
     GST_DEBUG ("couldn't output decoded frame : %u",
-        GST_MFX_SURFACE_FRAME_SURFACE (surface)->Data.FrameOrder);
+      GST_MFX_SURFACE_FRAME_SURFACE (surface)->Data.FrameOrder);
     return;
   }
 
   gst_video_codec_frame_set_user_data (out_frame,
-      gst_mfx_surface_ref (surface), (GDestroyNotify) gst_mfx_surface_unref);
+    gst_mfx_surface_ref (surface), (GDestroyNotify) gst_mfx_surface_unref);
   g_queue_push_head (&decoder->decoded_frames, out_frame);
   GST_LOG ("decoded frame : %u",
       GST_MFX_SURFACE_FRAME_SURFACE (surface)->Data.FrameOrder);
@@ -702,6 +683,19 @@ sort_pts (gconstpointer frame1, gconstpointer frame2, gpointer data)
   GstClockTime pts2 = ((GstVideoCodecFrame *) (frame2))->pts;
 
   return (pts1 > pts2 ? -1 : pts1 == pts2 ? 0 : +1);
+}
+
+void
+gst_mfx_decoder_restore_input_state (GstMfxDecoder * decoder, GList * frames)
+{
+  GstVideoCodecFrame *frame;
+  guint i = 0;
+
+  while ((frame = g_list_nth_data (frames, i++)) != 0) {
+    g_queue_insert_sorted (&decoder->pending_frames, frame, sort_pts, NULL);
+    g_queue_push_tail (&decoder->input_frames,
+      gst_video_codec_frame_ref (frame));
+  }
 }
 
 GstMfxDecoderStatus
@@ -743,7 +737,7 @@ gst_mfx_decoder_decode (GstMfxDecoder * decoder, GstVideoCodecFrame * frame)
       goto end;
   }
 
-  while (input_frame = g_queue_pop_head (&decoder->input_frames)) {
+  while ((input_frame = g_queue_pop_head (&decoder->input_frames)) != 0) {
     if (!gst_buffer_map (input_frame->input_buffer, &minfo, GST_MAP_READ)) {
       GST_ERROR ("Failed to map input buffer");
       ret = GST_MFX_DECODER_STATUS_ERROR_UNKNOWN;

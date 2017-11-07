@@ -563,18 +563,16 @@ gst_mfxdec_handle_frame (GstVideoDecoder * vdec, GstVideoCodecFrame * frame)
     case GST_MFX_DECODER_STATUS_ERROR_INCOMPATIBLE_VIDEO_PARAMS:
       GST_DEBUG ("Video params are incompatible, they may have changed"
         " - reinitializing decoder.");
-      if (gst_mfx_decoder_reinit (mfxdec->decoder)) {
-        ret = GST_VIDEO_DECODER_FLOW_NEED_DATA;
-        break;
-      }
-      GST_DEBUG ("decoder reinit failed - fully resetting decoder.");
       mfxdec->need_renegotiation = TRUE;
       if (gst_mfxdec_reset_full (mfxdec, mfxdec->sinkpad_caps, TRUE)) {
+        gst_mfx_decoder_restore_input_state (mfxdec->decoder,
+          gst_video_decoder_get_frames (vdec));
         ret = GST_VIDEO_DECODER_FLOW_NEED_DATA;
-        break;
       }
-      GST_ERROR ("couldn't reinit nor reset decoder.");
-      ret = GST_FLOW_ERROR;
+      else {
+        GST_ERROR ("couldn't hard reset decoder.");
+        ret = GST_FLOW_ERROR;
+      }
       break;
     case GST_MFX_DECODER_STATUS_CONFIGURED:
       if (!gst_mfxdec_negotiate (mfxdec))

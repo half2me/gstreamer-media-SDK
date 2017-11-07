@@ -84,9 +84,6 @@ gst_mfx_decoder_decide_output_memtype (GstMfxDecoder * decoder,
     gboolean memtype_is_video);
 
 gboolean
-gst_mfx_decoder_reinit (GstMfxDecoder * decoder);
-
-gboolean
 gst_mfx_decoder_reset (GstMfxDecoder * decoder);
 
 GstMfxDecoderStatus
@@ -94,6 +91,9 @@ gst_mfx_decoder_decode (GstMfxDecoder * decoder, GstVideoCodecFrame * frame);
 
 GstMfxDecoderStatus
 gst_mfx_decoder_flush (GstMfxDecoder * decoder);
+
+void
+gst_mfx_decoder_restore_input_state (GstMfxDecoder * decoder, GList * frames);
 
 G_END_DECLS
 #endif /* GST_MFX_DECODER_H */
