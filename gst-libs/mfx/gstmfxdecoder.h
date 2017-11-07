@@ -47,7 +47,6 @@ typedef enum
   GST_MFX_DECODER_STATUS_ERROR_BITSTREAM_PARSER,
   GST_MFX_DECODER_STATUS_ERROR_UNSUPPORTED_PROFILE,
   GST_MFX_DECODER_STATUS_ERROR_INVALID_PARAMETER,
-  GST_MFX_DECODER_STATUS_ERROR_INCOMPATIBLE_VIDEO_PARAMS,
   GST_MFX_DECODER_STATUS_ERROR_UNKNOWN = -1
 } GstMfxDecoderStatus;
 
@@ -82,9 +81,6 @@ gst_mfx_decoder_skip_corrupted_frames (GstMfxDecoder * decoder);
 void
 gst_mfx_decoder_decide_output_memtype (GstMfxDecoder * decoder,
     gboolean memtype_is_video);
-
-gboolean
-gst_mfx_decoder_reinit (GstMfxDecoder * decoder);
 
 gboolean
 gst_mfx_decoder_reset (GstMfxDecoder * decoder);
