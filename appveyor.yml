@@ -33,7 +33,8 @@ install:
   - set PKG_CONFIG_PATH=C:\Gstreamer\1.0\x86_64\lib\pkgconfig
   - set MSDK_LIB="C:\Program Files (x86)\IntelSWTools\Intel(R)_Media_SDK_2017.0.1\lib\x64"
   - set MSDK_INC="C:\Program Files (x86)\IntelSWTools\Intel(R)_Media_SDK_2017.0.1\include"
-  - dir "C:\Program Files (x86)\IntelSWTools\Intel(R)_Media_SDK_2017.0.1"
+  - dir %MSDK_LIB%
+  - dir %MSDK_INC%
   - set
   - meson ../msdk_build
 
