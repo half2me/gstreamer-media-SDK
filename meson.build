@@ -93,8 +93,13 @@ if mfx_dep.found() == false # otherwise look into Media SDK/Media Server Studio 
   mfx_home = run_command(python, '-c', 'import os; print(os.environ.get("INTELMEDIASDKROOT", os.environ.get("MFX_HOME", "")))').stdout().strip()
   
   if mfx_home != ''
-    mfx_libdir = [mfx_home + '/lib/lin_x64', mfx_home + '/lib/x64']
-    mfx_incdir = include_directories(mfx_home + '/include')
+    if host_machine.system() == 'windows'
+      mfx_libdir = [mfx_home + '\lib\x64']
+      mfx_incdir = include_directories(mfx_home + '\include')
+    else
+      mfx_libdir = [mfx_home + '/lib/lin_x64', mfx_home + '/lib/x64']
+      mfx_incdir = include_directories(mfx_home + '/include')
+    endif
     mfx_lib = cxx.find_library('mfx', dirs: mfx_libdir)
     if host_machine.system() == 'windows' # windows Media SDK / Media Server Studio prebuilt lib requires legacy_stdio_definitions
       legacy_stdio_dep = cc.find_library('legacy_stdio_definitions')
