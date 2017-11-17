@@ -1,0 +1,39 @@
+version: '{build}'
+os: Visual Studio 2015
+
+platform: x64
+
+environment:
+  PYTHON3: "C:\\Python36"
+  PIP3: C:\\Python36\Scripts\pip
+  
+init:
+  - cmd: set PATH=%PYTHON3%;%PYTHON3%\scripts;%PATH%
+
+install:
+  - ps: choco install -y -r pkgconfiglite
+  - call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
+  - ps: |
+      Write-Host "Installing GStreamer dev..." -ForegroundColor Cyan
+      $msiPath = "$($env:USERPROFILE)\gstreamer-1.0-devel-x86_64-1.12.3.msi"
+      Write-Host "Downloading..."
+      (New-Object Net.WebClient).DownloadFile('https://gstreamer.freedesktop.org/data/pkg/windows/1.12.3/gstreamer-1.0-devel-x86_64-1.12.3.msi', $msiPath)
+      Write-Host "Installing..."
+      cmd /c start /wait msiexec /package $msiPath /passive ADDLOCAL=ALL
+      Write-Host "Installed" -ForegroundColor Green
+  - ps: |
+      Write-Host "Installing Intel Media SDK..." -ForegroundColor Cyan
+      $msiPath = "$($env:USERPROFILE)\Intel_Media_SDK_2017_R1.msi"
+      Write-Host "Downloading..."
+      (New-Object Net.WebClient).DownloadFile('https://s3.amazonaws.com/uploads.hipchat.com/335237/4716904/bzlVHi6OTbIddgf/Intel_Media_SDK_2017_R1.msi', $msiPath)
+      Write-Host "Installing..."
+      cmd /c start /wait msiexec /package $msiPath /passive ADDLOCAL=ALL
+      Write-Host "Installed" -ForegroundColor Green
+  - pip install meson ninja
+  - set PKG_CONFIG_PATH=C:\Gstreamer\1.0\x86_64\lib\pkgconfig
+  - set INTELMEDIASDKROOT="C:\Program Files (x86)\IntelSWTools\Intel(R)_Media_SDK_2017.0.1"
+  - dir "C:\Program Files (x86)\IntelSWTools\"
+  - set
+  - meson ../msdk_build
+
+build: off
