@@ -37,5 +37,7 @@ install:
   - dir %MSDK_INC%
   - set
   - meson ../msdk_build
+  - cd ../msdk_build
+  - ninja
 
 build: off
