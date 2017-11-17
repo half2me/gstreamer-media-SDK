@@ -94,8 +94,8 @@ if mfx_dep.found() == false # otherwise look into Media SDK/Media Server Studio 
   
   if mfx_home != ''
     if host_machine.system() == 'windows'
-      mfx_libdir = [mfx_home + '\lib\x64']
-      mfx_incdir = include_directories(mfx_home + '\include')
+      mfx_libdir = run_command(python, '-c', 'import os; print(os.environ.get("MSDK_LIB"))').stdout().strip()
+      mfx_incdir = run_command(python, '-c', 'import os; print(os.environ.get("MSDK_INC"))').stdout().strip()
     else
       mfx_libdir = [mfx_home + '/lib/lin_x64', mfx_home + '/lib/x64']
       mfx_incdir = include_directories(mfx_home + '/include')
