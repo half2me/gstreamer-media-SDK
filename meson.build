@@ -96,14 +96,17 @@ if mfx_dep.found() == false # otherwise look into Media SDK/Media Server Studio 
     if host_machine.system() == 'windows'
       mfx_libdir = run_command(python, '-c', 'import os; print(os.environ.get("MSDK_LIB"))').stdout().strip()
       mfx_incdir = run_command(python, '-c', 'import os; print(os.environ.get("MSDK_INC"))').stdout().strip()
+      message(mfx_libdir)
+      message(mfx_incdir)
     else
       mfx_libdir = [mfx_home + '/lib/lin_x64', mfx_home + '/lib/x64']
       mfx_incdir = include_directories(mfx_home + '/include')
     endif
     mfx_lib = cxx.find_library('mfx', dirs: mfx_libdir)
-    print(mfx_lib)
+    message(mfx_lib)
     if host_machine.system() == 'windows' # windows Media SDK / Media Server Studio prebuilt lib requires legacy_stdio_definitions
       legacy_stdio_dep = cc.find_library('legacy_stdio_definitions')
+      message(legacy_stdio_dep)
       mfx_dep = declare_dependency(include_directories: mfx_incdir, dependencies: [mfx_lib, legacy_stdio_dep])
     else
       mfx_dep = declare_dependency(include_directories: mfx_incdir, dependencies: mfx_lib)
