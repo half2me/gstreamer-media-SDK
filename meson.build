@@ -101,6 +101,7 @@ if mfx_dep.found() == false # otherwise look into Media SDK/Media Server Studio 
       mfx_incdir = include_directories(mfx_home + '/include')
     endif
     mfx_lib = cxx.find_library('mfx', dirs: mfx_libdir)
+    print(mfx_lib)
     if host_machine.system() == 'windows' # windows Media SDK / Media Server Studio prebuilt lib requires legacy_stdio_definitions
       legacy_stdio_dep = cc.find_library('legacy_stdio_definitions')
       mfx_dep = declare_dependency(include_directories: mfx_incdir, dependencies: [mfx_lib, legacy_stdio_dep])
