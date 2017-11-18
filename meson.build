@@ -89,13 +89,13 @@ endif
 
 mfx_dep = dependency('mfx', required: false) #find libmfx using pkgconfig first
 if mfx_dep.found() == false # otherwise look into Media SDK/Media Server Studio directories
-  python = find_program('python3')
+  python = find_program('python')
   mfx_home = run_command(python, '-c', 'import os; print(os.environ.get("INTELMEDIASDKROOT", os.environ.get("MFX_HOME", "")))').stdout().strip()
   
   if mfx_home != ''
     if host_machine.system() == 'windows'
-      mfx_libdir = run_command(python, '-c', 'import os; print(os.environ.get("MSDK_LIB"))').stdout().strip()
-      mfx_incdir = include_directories(run_command(python, '-c', 'import os; print(os.environ.get("MSDK_INC"))').stdout().strip())
+      mfx_libdir = 'C:\\Program Files (x86)\\IntelSWTools\\Intel(R)_Media_SDK_2017.0.1\\lib\\x64'
+      mfx_incdir = 'C:\\Program Files (x86)\\IntelSWTools\\Intel(R)_Media_SDK_2017.0.1\\include'
     else
       mfx_libdir = [mfx_home + '/lib/lin_x64', mfx_home + '/lib/x64']
       mfx_incdir = include_directories(mfx_home + '/include')
