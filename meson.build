@@ -89,8 +89,7 @@ endif
 
 mfx_dep = dependency('mfx', required: false) #find libmfx using pkgconfig first
 if mfx_dep.found() == false # otherwise look into Media SDK/Media Server Studio directories
-  include_directories('C:\Program Files (x86)\IntelSWTools\Intel(R)_Media_SDK_2017.0.1\include')
-  python = find_program('python')
+  python = find_program('python3')
   mfx_home = run_command(python, '-c', 'import os; print(os.environ.get("INTELMEDIASDKROOT", os.environ.get("MFX_HOME", "")))').stdout().strip()
   
   if mfx_home != ''
